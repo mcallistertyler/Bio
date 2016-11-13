@@ -13,6 +13,7 @@ bettercost = 1000
 savedNN = {}
 bestNN = {}
 
+
 sets = [ [[0,0], [0.0]],
          [[0.1, 0.1], [0.02]],
          [[0.1,0.2], [0.05]],
@@ -20,7 +21,7 @@ sets = [ [[0,0], [0.0]],
          [[0.1,0.3], [0.10]],
          [[0.2,0.3], [0.13]]
     ]
-
+#sets2 = [(1,2), (2,3)]
 sets2 = [(0 , 0), (0.1 , 0.1), (0.1 , 0.2), (0.2 , 0.2), (0.1 , 0.3), (0.2 , 0.3)]
 #Sphere function
 #Take some arbitary input
@@ -37,13 +38,45 @@ def sphere(sets):
         ans = 0
     return newlist
 
+def rastrigin(sets):
+    newlist = []
+    for x in range(0,len(sets)):
+        ans = 20
+        newlist.append([list(sets[x])])
+        for y in range(0,len(sets[x])):
+            ans = ans + (sets[x][y]**2 - 10*math.cos(2 * math.pi * sets[y][x]))
+            if y == 1:
+                newlist[x].append([ans])
+            ans = 0
+    return newlist
+
+def rosenbrock(sets):
+    newlist = []
+    ans = 0
+    for x in range(0,len(sets)):
+        newlist.append([list(sets[x])])
+        for y in range(0,len(sets[x])):
+            print sets[x][y]
+            if y == 0:
+                ans = 100*(sets[x][y+1] - sets[x][y]**2)**2 + ((sets[x][y] - 1)**2)
+            if y == 1:
+                newlist[x].append([ans])
+                
+    return newlist
+
+
+
+
 def makeMatrix(I, J, fill=0.0):
     m = []
     for i in range(I):
         m.append([fill]*J)
     return m
 
-def sigmoid(x):
+def ReLU(x):
+        return x * (x > 0)
+
+def tanh(x):
     return np.tanh(x)
 
 def dsigmoid(y):
@@ -70,7 +103,7 @@ class NN:
             sum = 0.0
             for i in range(self.inputlayer):
                 sum = sum + self.activateInput[i] * self.wi[i][j]
-            self.activateHidden[j] = sigmoid(sum)
+            self.activateHidden[j] = tanh(sum)
 
         for k in range(self.outputlayer):
             sum = 0.0
@@ -87,10 +120,21 @@ class NN:
             x = self.update(p[0])
             print p[0], "->", x[0], ", Expected Result : ", p[1][0]
 
+    def finaltest(self, patterns):
+        global allTests
+        x = 0
+        finalAnswers = []
+        for p in patterns:
+            x = self.update(p[0])
+            print p[0],  x[0], "Expected : ", p[1][0]
+            finalAnswers.append(x[0])
+        return finalAnswers
+
     def costfunction(self, actual, expected):
         global totaldifference
         totaldifference = []
         difference = actual[0] - expected[0]
+        print "DIFFERENCE", difference
         totaldifference.append(difference)
         averagediff = sum(totaldifference) / len(totaldifference)
         # Made a change here to stop taking average difference
@@ -163,8 +207,8 @@ def mutateO(hiddenlayer, outputlayer, generation, difference, cost):
         return mutatedSet
 
 
-def Genetically(generations, population):
-    global sets, bestWI, bestWO, bettercost, betterdifference, sets2
+def Genetically(generations, population, sets2):
+    global sets, bestWI, bestWO, bettercost, betterdifference
 
     inputlayer = 2
     hiddenlayer = 4
@@ -172,7 +216,6 @@ def Genetically(generations, population):
     bestNN = 0
     bestCost = 0
     smallestCost = []
-    
     for t in range(0, generations):
         #Create new neural network for each generation
         nn2 = NN(inputlayer,hiddenlayer,outputlayer)
@@ -194,5 +237,7 @@ def Genetically(generations, population):
             bestWO = smallestCost[2]
             betterdifference = smallestCost[3]
         listofbests.append((t, smallestCost))
-
-Genetically(200, 500)
+    if t == generations - 1:
+        print"Finished! Returning answers to examplexperiment.py..."
+        return nn2.finaltest(sphere(sets2))
+Genetically(200, 500, sets2)

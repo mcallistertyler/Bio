@@ -1,4 +1,6 @@
 # Biologically Inspired Computation Courework 1
+#Tyler McAllister
+#H00153533
 The main file with the neural network and genetic algorithm is 'genetic.py'
 
 Dependencies are:
